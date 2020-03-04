@@ -1,4 +1,4 @@
-# Stochastic Latent Actor-Critic(SLAC) for discrete action settings in PyTorch
+# SLAC for discrete action settings in PyTorch
 A PyTorch implementation of Stochastic Latent Actor-Critic(SLAC)[[1]](#references) extended for discrete action settings. I tried to make it easy for readers to understand the algorithm. Please let me know if you have any questions. Also, any pull requests are welcomed.
 
 ## Requirements
