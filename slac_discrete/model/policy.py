@@ -21,13 +21,13 @@ class CateoricalPolicy(nn.Module):
         self.num_actions = num_actions
 
     def forward(self, feature_actions, deterministic=False):
-        assert feature_actions.shape[1:] == (self.embedding_dim, )
+        assert feature_actions.shape[1:] == (self.input_dim, )
 
         if deterministic:
             return torch.argmax(self.net(feature_actions), dim=1, keepdim=True)
 
         else:
-            log_action_probs = F.log_softmax(self(feature_actions), dim=1)
+            log_action_probs = F.log_softmax(self.net(feature_actions), dim=1)
             action_probs = log_action_probs.exp()
             actions = Categorical(action_probs).sample().view(-1, 1)
 

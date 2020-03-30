@@ -61,8 +61,6 @@ class Gaussian(nn.Module):
         if isinstance(x, list) or isinstance(x, tuple):
             x = torch.cat(x, dim=-1)
 
-        assert x.shape[1:] == (self.input_dim, )
-
         x = self.net(x)
         if self.std:
             mean = x
@@ -116,11 +114,11 @@ class Encoder(nn.Module):
         self.output_dim = output_dim
 
     def forward(self, x):
-        assert x.ndim == 5 and x.shape[2:] == (self.input_dim, 84, 84)
+        assert x.ndim == 5 and x.shape[2:] == (self.input_dim, 64, 64)
         batch_size, num_sequences = x.shape[:2]
 
         x = self.net(
-            x.view(batch_size * num_sequences, self.input_dim, 84, 84)
+            x.view(batch_size * num_sequences, self.input_dim, 64, 64)
             ).view(batch_size, num_sequences, self.output_dim)
 
         return x
@@ -162,6 +160,6 @@ class Decoder(nn.Module):
 
         x = self.net(
             x.view(batch_size * num_sequences, self.input_dim, 1, 1)
-            ).view(batch_size, num_sequences, self.output_dim, 84, 84)
+            ).view(batch_size, num_sequences, self.output_dim, 64, 64)
 
         return Normal(loc=x, scale=torch.ones_like(x) * self.std)

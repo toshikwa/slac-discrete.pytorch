@@ -7,7 +7,7 @@ from slac_discrete.network import Gaussian, ConstantGaussian, Encoder, Decoder
 
 class LatentNetwork(nn.Module):
 
-    def __init__(self, observation_shape, action_shape, feature_dim=256,
+    def __init__(self, observation_shape, num_actions, feature_dim=256,
                  latent1_dim=32, latent2_dim=256, hidden_units=[256, 256],
                  leaky_slope=0.2):
         super(LatentNetwork, self).__init__()
@@ -21,11 +21,11 @@ class LatentNetwork(nn.Module):
             latent1_dim, latent2_dim, hidden_units, leaky_slope=leaky_slope)
         # p(z1(t+1) | z2(t), a(t))
         self.latent1_prior = Gaussian(
-            latent2_dim + action_shape[0], latent1_dim, hidden_units,
+            latent2_dim + num_actions, latent1_dim, hidden_units,
             leaky_slope=leaky_slope)
         # p(z2(t+1) | z1(t+1), z2(t), a(t))
         self.latent2_prior = Gaussian(
-            latent1_dim + latent2_dim + action_shape[0], latent2_dim,
+            latent1_dim + latent2_dim + num_actions, latent2_dim,
             hidden_units, leaky_slope=leaky_slope)
 
         # q(z1(0) | feat(0))
@@ -35,14 +35,14 @@ class LatentNetwork(nn.Module):
         self.latent2_init_posterior = self.latent2_init_prior
         # q(z1(t+1) | feat(t+1), z2(t), a(t))
         self.latent1_posterior = Gaussian(
-            feature_dim + latent2_dim + action_shape[0], latent1_dim,
+            feature_dim + latent2_dim + num_actions, latent1_dim,
             hidden_units, leaky_slope=leaky_slope)
         # q(z2(t+1) | z1(t+1), z2(t), a(t)) = p(z2(t+1) | z1(t+1), z2(t), a(t))
         self.latent2_posterior = self.latent2_prior
 
         # p(r(t) | z1(t), z2(t), a(t), z1(t+1), z2(t+1))
         self.reward_predictor = Gaussian(
-            2 * latent1_dim + 2 * latent2_dim + action_shape[0],
+            2 * latent1_dim + 2 * latent2_dim + num_actions,
             1, hidden_units, leaky_slope=leaky_slope)
 
         # feat(t) = x(t) : This encoding is performed deterministically.
@@ -56,7 +56,7 @@ class LatentNetwork(nn.Module):
     def sample_prior(self, actions_seq, init_features=None):
         ''' Sample from prior dynamics (with conditionning on the initial frames).
         Args:
-            actions_seq   : (N, S, *action_shape) tensor of action sequences.
+            actions_seq   : (N, S, num_actions) tensor of action sequences.
             init_features : (N, *) tensor of initial frames or None.
         Returns:
             latent1_samples : (N, S+1, L1) tensor of sampled latent vectors.
@@ -117,7 +117,7 @@ class LatentNetwork(nn.Module):
         ''' Sample from posterior dynamics.
         Args:
             features_seq : (N, S+1, 256) tensor of feature sequenses.
-            actions_seq  : (N, S, *action_space) tensor of action sequenses.
+            actions_seq  : (N, S, num_actions) tensor of action sequenses.
         Returns:
             latent1_samples : (N, S+1, L1) tensor of sampled latent vectors.
             latent2_samples : (N, S+1, L2) tensor of sampled latent vectors.

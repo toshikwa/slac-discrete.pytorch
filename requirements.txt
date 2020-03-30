@@ -1,4 +1,5 @@
 pyyaml
+tqdm
 numpy==1.18.1
 torch==1.4.0
 gym[atari]==0.15.6
