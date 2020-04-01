@@ -40,6 +40,21 @@ class Flatten(nn.Module):
         return x.view(x.size(0), -1)
 
 
+class UpSamplingConv2d(nn.Module):
+
+    def __init__(self, scale_factor, in_channels, out_channels):
+        super(UpSamplingConv2d, self).__init__()
+        self.net = nn.Sequential(
+            nn.Upsample(
+                scale_factor=scale_factor, mode='bilinear',
+                align_corners=True),
+            nn.Conv2d(in_channels, out_channels, 3, padding=1)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+
 class Gaussian(nn.Module):
     """ Diagonal gaussian distribution parametrized by DNN. """
 

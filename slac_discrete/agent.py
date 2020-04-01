@@ -18,8 +18,8 @@ class SlacDiscreteAgent:
                  latent_batch_size=32, num_sequences=8, lr=0.0003,
                  latent_lr=0.0001, feature_dim=256, latent1_dim=32,
                  latent2_dim=256, hidden_units=(256, 256), memory_size=10**6,
-                 gamma=0.99, tau=0.005, target_entropy_ratio=0.95,
-                 leaky_slope=0.2, start_steps=100000,
+                 gamma=0.99, tau=0.005, target_entropy_ratio=0.98,
+                 leaky_slope=0.2, reward_coef=100, start_steps=100000,
                  initial_learning_steps=10000, update_interval=1,
                  log_interval=100, eval_interval=250000, num_eval_steps=125000,
                  max_episode_steps=27000, grad_cliping=None,
@@ -104,6 +104,7 @@ class SlacDiscreteAgent:
         self.num_sequences = num_sequences
         self.gamma = gamma
         self.tau = tau
+        self.reward_coef = reward_coef
         self.start_steps = start_steps
         self.initial_learning_steps = initial_learning_steps
         self.update_interval = update_interval
@@ -216,11 +217,11 @@ class SlacDiscreteAgent:
 
         if self.episodes % self.log_interval == 0:
             self.writer.add_scalar(
-                'reward/train', self.train_return.get(), self.steps)
+                'return/train', self.train_return.get(), self.steps)
 
         print(f'episode: {self.episodes:<4}  '
-              f'episode steps: {episode_steps:<4}  '
-              f'reward: {episode_return:<5.1f}')
+              f'steps: {episode_steps:<4}  '
+              f'return: {episode_return:<5.1f}')
 
     def learn(self):
         self.learning_steps += 1
@@ -344,7 +345,8 @@ class SlacDiscreteAgent:
         reward_log_likelihood_loss = reward_log_likelihoods.mean(dim=0).sum()
 
         latent_loss =\
-            kld_loss - log_likelihood_loss - reward_log_likelihood_loss
+            kld_loss - log_likelihood_loss -\
+            self.reward_coef * reward_log_likelihood_loss
 
         if self.learning_steps % self.log_interval == 0:
             reconst_error = (
@@ -356,7 +358,8 @@ class SlacDiscreteAgent:
             self.writer.add_scalar(
                 'stats/reconst_error', reconst_error, self.learning_steps)
             self.writer.add_scalar(
-                'stats/reward_reconst_error', reward_reconst_error,
+                'stats/reward_reconst_error',
+                self.reward_coef * reward_reconst_error,
                 self.learning_steps)
 
         if self.learning_steps % (100 * self.log_interval) == 0:
@@ -372,15 +375,15 @@ class SlacDiscreteAgent:
                 cond_pri_images = self.latent_net.decoder(
                         cond_pri_samples).loc[0].detach().cpu()
 
-            images = torch.cat(
+            images = torch.clamp(torch.cat(
                 [gt_images, post_images, cond_pri_images, pri_images],
-                dim=-2)
+                dim=-2), 0, 1)
 
-            # Visualize multiple of 8 images because each row contains 8
-            # images at most.
+            # Visualize 8 sequences instead of 9 for a better visualization
+            # because each row contains 8 images at most in TensorBoard.
             self.writer.add_images(
                 'images/gt_posterior_cond-prior_prior',
-                images[:(len(images)//8)*8], self.learning_steps)
+                images[:8], self.learning_steps)
 
         return latent_loss
 
@@ -490,11 +493,24 @@ class SlacDiscreteAgent:
         print('-' * 60)
 
     def save_models(self, save_dir):
-        self.latent_net.encoder.save(os.path.join(save_dir, 'encoder.pth'))
-        self.latent_net.save(os.path.join(save_dir, 'latent_net.pth'))
-        self.policy_net.save(os.path.join(save_dir, 'policy_net.pth'))
-        self.online_q_net.save(os.path.join(save_dir, 'online_q_net.pth'))
-        self.target_q_net.save(os.path.join(save_dir, 'target_q_net.pth'))
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        torch.save(
+            self.latent_net.encoder.state_dict(),
+            os.path.join(save_dir, 'encoder.pth'))
+        torch.save(
+            self.latent_net.state_dict(),
+            os.path.join(save_dir, 'latent_net.pth'))
+        torch.save(
+            self.policy_net.state_dict(),
+            os.path.join(save_dir, 'policy_net.pth'))
+        torch.save(
+            self.online_q_net.state_dict(),
+            os.path.join(save_dir, 'online_q_net.pth'))
+        torch.save(
+            self.target_q_net.state_dict(),
+            os.path.join(save_dir, 'target_q_net.pth'))
 
     def __del__(self):
         self.writer.close()

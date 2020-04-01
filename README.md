@@ -8,7 +8,11 @@ You can install dependencies using `pip install -r requirements.txt`.
 You can train Slac-Discrete agent using hyperparameters [here](https://github.com/ku2482/slac-discrete.pytorch/blob/master/config/slac_discrete.yaml).
 
 ```
-python main.py --cuda --env_id PongNoFrameskip-v4 --seed 0 --config config/slac_discrete.yaml
+python main.py \
+    --cuda \
+    --env_id BattleZoneNoFrameskip-v4 \
+    --config config/slac_discrete.yaml \
+    --seed 0
 ```
 
 ## References
