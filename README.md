@@ -1,5 +1,7 @@
-# SLAC for discrete action settings in PyTorch
-A PyTorch implementation of Stochastic Latent Actor-Critic(SLAC)[[1]](#references) extended for discrete action settings. I tried to make it easy for readers to understand the algorithm. Please let me know if you have any questions. Also, any pull requests are welcomed.
+# (Experimental) SLAC for discrete action settings in PyTorch
+A PyTorch implementation of Stochastic Latent Actor-Critic(SLAC)[[1]](#references) extended for discrete action settings. I tried to make it easy for readers to understand the algorithm. Please let me know if you have any questions. 
+
+It's an experimental repository and I'm trying to making it work. Any pull requests are welcomed :)
 
 ## Requirements
 You can install dependencies using `pip install -r requirements.txt`.
@@ -10,7 +12,7 @@ You can train Slac-Discrete agent using hyperparameters [here](https://github.co
 ```
 python main.py \
     --cuda \
-    --env_id BattleZoneNoFrameskip-v4 \
+    --env_id JourneyEscapeNoFrameskip-v4 \
     --config config/slac_discrete.yaml \
     --seed 0
 ```

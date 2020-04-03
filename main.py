@@ -36,7 +36,7 @@ if __name__ == '__main__':
         '--config', type=str,
         default=os.path.join('config', 'slac_discrete.yaml'))
     parser.add_argument(
-        '--env_id', type=str, default='BattleZoneNoFrameskip-v4')
+        '--env_id', type=str, default='JourneyEscapeNoFrameskip-v4')
     parser.add_argument('--cuda', action='store_true')
     parser.add_argument('--seed', type=int, default=0)
     args = parser.parse_args()
