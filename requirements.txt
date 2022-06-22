@@ -1,6 +1,6 @@
 pyyaml
 tqdm
-numpy==1.18.1
+numpy==1.22.0
 torch==1.4.0
 gym[atari]==0.15.6
 tensorboard==2.1.0
